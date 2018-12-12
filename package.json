@@ -25,6 +25,7 @@
     "migrate": "truffle migrate --network ganache --reset",
     "migrate:rinkeby": "truffle migrate --network rinkeby",
     "test": "tsc -b && truffle test --network ganache build/scripts/*.spec.js build/scripts/*.bench.js",
+    "test:profile": "tsc -b && truffle test --network ganache build/scripts/*.profile.js build/scripts/utils/profilerWriter.js && yarn profiler:report:html",
     "test:coverage": "solidity-coverage",
     "gen:contract-typings": "typechain --target ethers --outDir typings/contracts './build/contracts/*.json'",
     "lint": "yarn lint:ts && yarn lint:sol",
@@ -36,7 +37,8 @@
     "ganache": "ganache-cli --networkId ${npm_package_config_ganacheNetworkID} --host 0.0.0.0 --port ${npm_package_config_ganachePort} --gasLimit ${npm_package_config_ganacheGasLimit} --gasPrice ${npm_package_config_ganacheGasPrice} --defaultBalanceEther ${npm_package_config_etherBalance} --deterministic --mnemonic \"${npm_package_config_mnemonic}\" ${npm_package_config_extra}",
     "ganache:verbose": "ganache-cli --networkId ${npm_package_config_ganacheNetworkID} --verbose --host 0.0.0.0 --port ${npm_package_config_ganachePort} --gasLimit ${npm_package_config_ganacheGasLimit} --gasPrice ${npm_package_config_ganacheGasPrice} --defaultBalanceEther ${npm_package_config_etherBalance} --deterministic --mnemonic \"${npm_package_config_mnemonic}\" ${npm_package_config_extra}",
     "ganache:stop": "ps aux | grep ganache-cli | grep -v grep | awk '{print $2}' | xargs kill -9",
-    "console": "truffle console"
+    "console": "truffle console",
+    "profiler:report:html": "istanbul report html && google-chrome coverage/index.html"
   },
   "config": {
     "mnemonic": "dose weasel clever culture letter volume endorse used harvest ripple circle install",
@@ -48,6 +50,9 @@
     "extra": ""
   },
   "devDependencies": {
+    "@0xproject/sol-compiler": "1.1.6",
+    "@0x/sol-cov": "^2.1.14",
+    "@0x/utils": "^2.0.6",
     "@types/chai-as-promised": "^7.1.0",
     "@types/chai-string": "^1.4.1",
     "@types/mocha": "^5.2.5",
@@ -59,13 +64,13 @@
     "eth-gas-reporter": "^0.1.12",
     "ethers": "^4.0.15",
     "ganache-cli": "6.1.8",
-    "openzeppelin-eth": "^2.0.2",
+    "istanbul": "^0.4.5",
+    "lodash": "^4.17.11",
+    "openzeppelin-solidity": "^2.0.0",
     "solc": "^0.4.25",
     "solidity-coverage": "^0.5.11",
     "solium": "^1.1.8",
     "truffle": "^5.0.0-beta.2",
-    "truffle-contract": "^3.0.6",
-    "truffle-hdwallet-provider": "^1.0.0-web3one.2",
     "tslint": "^5.11.0",
     "typechain": "^0.3.9",
     "typescript": "3.2.1",

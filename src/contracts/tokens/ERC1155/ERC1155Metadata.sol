@@ -11,7 +11,16 @@ import "../../utils/ERC165.sol";
  */
 contract ERC1155Metadata is IERC1155Metadata, ERC165 {
   // URI's default URI prefix
-  string internal baseMetadataURI;
+  string private baseMetadataURI;
+
+  // Contract metadata URL
+  string private contractMetadataURI;
+
+  // Hex numbers for creating hexadecimal tokenId
+  bytes16 private constant HEX_MAP = '0123456789ABCDEF';
+
+  // bytes4(keccak256('contractURI()')) == 0xe8a3d485
+  bytes4 private constant _INTERFACE_ID_CONTRACT_URI = 0xe8a3d485;
 
   /***********************************|
   |     Metadata Public Function s    |
@@ -24,9 +33,17 @@ contract ERC1155Metadata is IERC1155Metadata, ERC165 {
    * @return URI string
    */
   function uri(uint256 _id) public override view returns (string memory) {
-    return string(abi.encodePacked(baseMetadataURI, _uint2str(_id), ".json"));
+    return _uri(_id, 0);
   }
 
+  /**
+   * @notice Opensea calls this fuction to get information about how to display storefront.
+   *
+   * @return full URI to the location of the contract metadata.
+   */
+  function contractURI() public view returns (string memory) {
+    return contractMetadataURI;
+  }
 
   /***********************************|
   |    Metadata Internal Functions    |
@@ -37,12 +54,8 @@ contract ERC1155Metadata is IERC1155Metadata, ERC165 {
    * @param _tokenIDs Array of IDs of tokens to log default URI
    */
   function _logURIs(uint256[] memory _tokenIDs) internal {
-    string memory baseURL = baseMetadataURI;
-    string memory tokenURI;
-
     for (uint256 i = 0; i < _tokenIDs.length; i++) {
-      tokenURI = string(abi.encodePacked(baseURL, _uint2str(_tokenIDs[i]), ".json"));
-      emit URI(tokenURI, _tokenIDs[i]);
+      emit URI(_uri(_tokenIDs[i], 0), _tokenIDs[i]);
     }
   }
 
@@ -55,12 +68,25 @@ contract ERC1155Metadata is IERC1155Metadata, ERC165 {
   }
 
   /**
+   * @notice Will update the contract metadata URI
+   * @param _newContractMetadataURI New contract metadata URI
+   */
+  function _setContractMetadataURI(string memory _newContractMetadataURI)
+    internal
+  {
+    contractMetadataURI = _newContractMetadataURI;
+  }
+
+  /**
    * @notice Query if a contract implements an interface
    * @param _interfaceID  The interface identifier, as specified in ERC-165
-   * @return `true` if the contract implements `_interfaceID` and
+   * @return `true` if the contract implements `_interfaceID` or CONTRACT_URI
    */
   function supportsInterface(bytes4 _interfaceID) public override virtual pure returns (bool) {
-    if (_interfaceID == type(IERC1155Metadata).interfaceId) {
+    if (
+      _interfaceID == type(IERC1155Metadata).interfaceId ||
+      _interfaceID == _INTERFACE_ID_CONTRACT_URI
+    ) {
       return true;
     }
     return super.supportsInterface(_interfaceID);
@@ -72,34 +98,32 @@ contract ERC1155Metadata is IERC1155Metadata, ERC165 {
   |__________________________________*/
 
   /**
-   * @notice Convert uint256 to string
-   * @param _i Unsigned integer to convert to string
+   * @notice returns uri
+   * @param tokenId Unsigned integer to convert to string
    */
-  function _uint2str(uint256 _i) internal pure returns (string memory _uintAsString) {
-    if (_i == 0) {
-      return "0";
+  function _uri(uint256 tokenId, uint256 minLength)
+    internal
+    view
+    returns (string memory)
+  {
+    // Calculate URI
+    string memory baseURL = _baseMetadataURI;
+    uint256 temp = tokenId;
+    uint256 length = tokenId == 0 ? 2 : 0;
+    while (temp != 0) {
+      length += 2;
+      temp >>= 8;
     }
+    if (length > minLength) minLength = length;
 
-    uint256 j = _i;
-    uint256 ii = _i;
-    uint256 len;
-
-    // Get number of bytes
-    while (j != 0) {
-      len++;
-      j /= 10;
+    bytes memory buffer = new bytes(minLength);
+    for (uint256 i = minLength; i > minLength - length; --i) {
+      buffer[i - 1] = HEX_MAP[tokenId & 0xf];
+      tokenId >>= 4;
     }
+    minLength -= length;
+    while (minLength > 0) buffer[--minLength] = '0';
 
-    bytes memory bstr = new bytes(len);
-    uint256 k = len - 1;
-
-    // Get each individual ASCII
-    while (ii != 0) {
-      bstr[k--] = byte(uint8(48 + ii % 10));
-      ii /= 10;
-    }
-
-    // Convert to string
-    return string(bstr);
+    return string(abi.encodePacked(baseURL, buffer, '.json'));
   }
 }

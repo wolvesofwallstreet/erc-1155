@@ -101,6 +101,8 @@ contract ERC1155 is IERC1155, ERC165 {
   function _callonERC1155Received(address _from, address _to, uint256 _id, uint256 _amount, uint256 _gasLimit, bytes memory _data)
     internal
   {
+    _beforeTokenTransfer(msg.sender, _from, _to, _id, _amount, '');
+
     // Check if recipient is contract
     if (_to.isContract()) {
       bytes4 retval = IERC1155TokenReceiver(_to).onERC1155Received{gas: _gasLimit}(msg.sender, _from, _id, _amount, _data);
@@ -119,6 +121,8 @@ contract ERC1155 is IERC1155, ERC165 {
     internal
   {
     require(_ids.length == _amounts.length, "ERC1155#_safeBatchTransferFrom: INVALID_ARRAYS_LENGTH");
+
+    _beforeBatchTokenTransfer(msg.sender, _from, _to, _ids, _amounts, '');
 
     // Number of transfer to execute
     uint256 nTransfer = _ids.length;
@@ -216,6 +220,33 @@ contract ERC1155 is IERC1155, ERC165 {
     return batchBalances;
   }
 
+  /***********************************|
+  |               HOOKS               |
+  |__________________________________*/
+
+  /**
+   * @notice overrideable hook for single transfers.
+   */
+  function _beforeTokenTransfer(
+    address operator,
+    address from,
+    address to,
+    uint256 tokenId,
+    uint256 amount,
+    bytes memory data
+  ) internal virtual {}
+
+  /**
+   * @notice overrideable hook for batch transfers.
+   */
+  function _beforeBatchTokenTransfer(
+    address operator,
+    address from,
+    address to,
+    uint256[] memory tokenIds,
+    uint256[] memory amounts,
+    bytes memory data
+  ) internal virtual {}
 
   /***********************************|
   |          ERC165 Functions         |

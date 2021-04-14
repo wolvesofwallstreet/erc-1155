@@ -43,7 +43,7 @@ contract ERC1155 is IERC1155, ERC165 {
    * @param _data    Additional data with no specified format, sent in call to `_to`
    */
   function safeTransferFrom(address _from, address _to, uint256 _id, uint256 _amount, bytes memory _data)
-    public override
+    public virtual override
   {
     require((msg.sender == _from) || isApprovedForAll(_from, msg.sender), "ERC1155#safeTransferFrom: INVALID_OPERATOR");
     require(_to != address(0),"ERC1155#safeTransferFrom: INVALID_RECIPIENT");
@@ -62,7 +62,7 @@ contract ERC1155 is IERC1155, ERC165 {
    * @param _data     Additional data with no specified format, sent in call to `_to`
    */
   function safeBatchTransferFrom(address _from, address _to, uint256[] memory _ids, uint256[] memory _amounts, bytes memory _data)
-    public override
+    public virtual override
   {
     // Requirements
     require((msg.sender == _from) || isApprovedForAll(_from, msg.sender), "ERC1155#safeBatchTransferFrom: INVALID_OPERATOR");
@@ -158,7 +158,7 @@ contract ERC1155 is IERC1155, ERC165 {
    * @param _approved  True if the operator is approved, false to revoke approval
    */
   function setApprovalForAll(address _operator, bool _approved)
-    external override
+    public virtual override
   {
     // Update operator status
     operators[msg.sender][_operator] = _approved;
@@ -172,7 +172,7 @@ contract ERC1155 is IERC1155, ERC165 {
    * @return isOperator True if the operator is approved, false if not
    */
   function isApprovedForAll(address _owner, address _operator)
-    public override view returns (bool isOperator)
+    public virtual override view returns (bool isOperator)
   {
     return operators[_owner][_operator];
   }
